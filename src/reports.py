@@ -1,10 +1,8 @@
-import datetime
+from datetime import datetime, timedelta, time
 import logging
 import os.path
 from typing import Optional
-
 import pandas as pd
-
 from config import DATA_DIR, LOGS_DIR
 
 log_path = os.path.join(LOGS_DIR, "services.log")
@@ -16,9 +14,9 @@ services_logger.addHandler(file_handler)
 
 
 def report(func):
-    """Принимает функцию"""
+    """Accept a function and save its result to a report file."""
     def wrapper(*args, **kwargs):
-        """Записывает данные отчета в файл"""
+        """Save the report data to a file."""
         result = func(*args, **kwargs)
         result_str = str(result)
         with open(os.path.join(DATA_DIR, "reports.txt"), "w", encoding="utf-8") as file:
@@ -34,27 +32,45 @@ def find_spending_by_category(
     date: Optional[str] = None,
     transactions: pd.DataFrame = pd.read_csv(os.path.join(DATA_DIR, "operations.csv")),
 ) -> pd.DataFrame:
-    """Функция возвращает траты по заданной категории за последние три месяца"""
+    """Return expenses for the specified category for the last three months."""
 
     transactions["Дата операции"] = transactions["Дата операции"].apply(
-        lambda row: datetime.datetime.strptime(row, "%d.%m.%Y %H:%M:%S")
+        lambda row: datetime.strptime(row, "%d.%m.%Y %H:%M:%S")
     )
     transactions["Сумма операции"] = transactions["Сумма операции"].astype(str).str.replace(",", ".").astype(float)
-    spendings = transactions[(transactions["Описание"] == category) & (transactions["Сумма операции"] < 0)]
+    spendings = transactions[(transactions["Категория"] == category) & (transactions["Сумма операции"] < 0)]
+
     if date is not None:
-        date = datetime.datetime.strptime(date, "%Y.%m.%d %H:%M:%S")
+        date = datetime.strptime(date, "%Y.%m.%d")
+        date = datetime.combine(date, time.max)
     else:
-        date = datetime.datetime.today()
+        date = datetime.today()
     end_date = date
-    start_date = date - datetime.timedelta(days=90)
+    start_date = date - timedelta(days=90)
+
     spendings_filtered = spendings[
         (spendings["Дата операции"] >= start_date) & (spendings["Дата операции"] <= end_date)
     ]
-    return spendings_filtered
+    spendigs_dict = spendings_filtered.to_dict(orient="records")
+    return spendigs_dict
 
 
-# if __name__ == "__main__":
-#     sort = find_spending_by_category("Магнит", "2020.03.03 03:42:32")
-#     # spending_by_category(pd.read_csv(os.path.join(DATA_DIR, "operations.csv")), "Колхоз", "20.03.2024")
-#     # print(type(sort))
-#     print(sort)
+def reports_main():
+    print("Do you want to get the expenses for the last three months? (yes/no)")
+    whether_expenses = input("Enter yes or no: ").capitalize()
+    if whether_expenses == "Yes":
+        print("To get expenses by category, enter the desired category and optionally specify a date.")
+        category = input("Enter the category to get expenses for: ")
+        print("Do you want to specify a date? (yes/no)")
+        whether_date = input("Enter yes or no: ").capitalize()
+
+        if whether_date == "Yes":
+            date = input("Enter the date in the format YYYY.MM.DD: ")
+            spendings_by_category = find_spending_by_category(category, date)
+        else:
+            spendings_by_category = find_spending_by_category(category)
+
+        print("Displaying expenses for the specified category.")
+        return spendings_by_category
+    else:
+        return ""

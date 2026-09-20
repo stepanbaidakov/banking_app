@@ -1,10 +1,9 @@
 import logging
 import os
 import re
-
 import pandas as pd
-
 from config import DATA_DIR, LOGS_DIR
+
 
 log_path = os.path.join(LOGS_DIR, "services.log")
 services_logger = logging.Logger(__name__)
@@ -16,7 +15,7 @@ services_logger.setLevel(logging.DEBUG)
 
 
 def normalize_value(value):
-    """Функция переводит неподходящие значения под формат python"""
+    """Convert incompatible values to Python-compatible values."""
     if pd.isna(value):
         return None
     if isinstance(value, str) and value == "null":
@@ -25,17 +24,33 @@ def normalize_value(value):
 
 
 def find_by_number():
-    """Функция возвращает JSON со всеми транзакциями, содержащими в описании мобильные номера"""
+    """Return a JSON response with all transactions containing phone numbers in their description."""
+    print("Displaying transactions containing phone numbers.")
     operations = pd.read_csv(os.path.join(DATA_DIR, "operations.csv"))
-    services_logger.info("Загружается файл с транзакциями")
+    services_logger.info("Loading the transactions file")
+
     pattern = re.compile(r"\+\d+\s\d+\s\d+\W\d+\W\d+")
     find_filter = operations["Описание"].astype(str).apply(lambda x: bool(pattern.search(x)))
-    services_logger.info("Производится поиск операций содержащие номер")
+
+    services_logger.info("Searching for transactions containing a phone number")
+
     number_operations = operations[find_filter]
     result = number_operations.to_dict(orient="records")
+
     normalized = []
     for operation in result:
         norm_operation = {key: normalize_value(value) for key, value in operation.items()}
         normalized.append(norm_operation)
-    services_logger.info("Найденные операции возвращаются в виде json-ответа")
+
+    services_logger.info("Returning the matching transactions as a JSON response")
     return normalized
+
+
+def services_main():
+    """Run the services."""
+    print("Do you want to display the transactions containing phone numbers in their description? (yes/no)")
+    whether_find = input("Enter yes or no: ")
+    if whether_find == "yes":
+        return find_by_number()
+    else:
+        return ""
