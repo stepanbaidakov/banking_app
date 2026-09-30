@@ -43,7 +43,7 @@ def find_by_number():
         normalized.append(norm_operation)
 
     services_logger.info("Returning the matching transactions as a JSON response")
-    return normalized
+    return {"transactions": normalized}
 
 
 def services_main():
@@ -53,4 +53,4 @@ def services_main():
     if whether_find == "yes":
         return find_by_number()
     else:
-        return ""
+        return {}

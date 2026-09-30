@@ -1,8 +1,7 @@
-from src.reports import reports_main
+from src.reports import reports_main, find_spending_by_category
 from src.services import services_main
 from src.views import views_main
 from src.utils import *
-
 
 def main():
     """Run the project."""
@@ -16,4 +15,4 @@ def main():
     yield found_by_number
 
 for step in main():
-    print(step)
+    print(json.dumps(step, ensure_ascii=False))

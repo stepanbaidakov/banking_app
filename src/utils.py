@@ -44,31 +44,34 @@ def transform_date(date_str: str) -> datetime:
     raise ValueError("Wrong date format")
 
 
-def get_date_range(date: datetime, range_type: str = "M") -> list[datetime]:
+def get_date_range(date: datetime, range_type: str = "M") -> list[datetime, datetime]:
     """Define the boundaries of the time range depending on range_type"""
     if range_type == "W":
         start_date = date - timedelta(days=date.weekday())
+        start_date = datetime.combine(start_date, time.min)
         end_date = date
         get_range_logger.info("Range W")
 
     elif range_type == "M":
         start_date = date.replace(day=1)
+        start_date = datetime.combine(start_date, time.min)
         end_date = date
         get_range_logger.info("Range M")
 
     elif range_type == "Y":
         start_date = date.replace(month=1, day=1)
+        start_date = datetime.combine(start_date, time.min)
         end_date = date
         get_range_logger.info("Range Y")
 
     elif range_type == "ALL":
-        end_date = datetime(2018, 1, 1)
-        end_date = datetime.combine(date, time.max)
+        start_date = datetime(2018, 1, 1)
+        end_date = date
         get_range_logger.info("Whole payment history up to the selected date")
     else:
         get_range_logger.error("Wrong Range Type")
         raise ValueError()
-    return [start_date, end_date]
+    return start_date, end_date
 
 
 def normalize_value(value):
@@ -157,14 +160,14 @@ def calculate_expenses(expenses: list[dict]):
     calculate_expenses_logger.info("Recording cash and transfer expenses separately")
 
     if categories_count > 0:
-        main_categories.append({"category": "Остальное", "amount": rest_totals})
+        main_categories.append({"category": "Others", "amount": rest_totals})
         result = {
             "total_amount": round(sum(expenses_totals), 2),
             "main": main_categories,
             "transfers_and_cash": cash_categories_list,
         }
         calculate_expenses_logger.info(
-            'Returning a JSON response with expenses grouped by category and cash, including the "Остальное" section'
+            'Returning a JSON response with expenses grouped by category and cash, including the "Others" section'
         )
     else:
         result = {
@@ -173,7 +176,7 @@ def calculate_expenses(expenses: list[dict]):
             "transfers_and_cash": cash_categories_list,
         }
         calculate_expenses_logger.info(
-            'Returning a JSON response with expenses grouped by category and cash, without the "Остальное" section'
+            'Returning a JSON response with expenses grouped by category and cash, without the "Others" section'
         )
     return result
 

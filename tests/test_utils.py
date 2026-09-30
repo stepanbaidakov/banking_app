@@ -19,47 +19,47 @@ from src.utils import (
 
 @pytest.fixture
 def date():
-    return "2020-12-20 00:00:00"
+    return "2020-12-20"
 
 
 def test_transform_date(date):
-    assert transform_date(date) == datetime.datetime(2020, 12, 20, 0, 0, 0)
+    assert transform_date(date) == datetime.datetime(2020, 12, 20, 23, 59, 59, 999999)
 
 
 @pytest.mark.parametrize(
     "date, range_, dates",
     [
         (
-            datetime.datetime(2021, 12, 20, 0, 0, 0),
+            datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
             "W",
-            [
+            (
                 datetime.datetime(2021, 12, 20, 0, 0, 0),
                 datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
-            ],
+            ),
         ),
         (
-            datetime.datetime(2021, 12, 20, 0, 0, 0),
+            datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
             "M",
-            [
+            (
                 datetime.datetime(2021, 12, 1, 0, 0, 0),
                 datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
-            ],
+            ),
         ),
         (
-            datetime.datetime(2021, 1, 20, 0, 0, 0),
+            datetime.datetime(2021, 1, 20, 23, 59, 59, 999999),
             "Y",
-            [
+            (
                 datetime.datetime(2021, 1, 1, 0, 0, 0),
                 datetime.datetime(2021, 1, 20, 23, 59, 59, 999999),
-            ],
+            ),
         ),
         (
-            datetime.datetime(2021, 12, 20, 0, 0, 0),
+            datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
             "ALL",
-            [
-                datetime.datetime(2021, 12, 20, 0, 0, 0),
-                datetime.datetime(2021, 12, 31, 23, 59, 59, 999999),
-            ],
+            (
+                datetime.datetime(2018, 1, 1, 0, 0, 0),
+                datetime.datetime(2021, 12, 20, 23, 59, 59, 999999),
+            ),
         ),
     ],
 )
@@ -607,13 +607,8 @@ def test_calculate_expenses(expenses):
     }
 
 
-@pytest.fixture
-def path_user_settings_test():
-    return os.path.join(DATA_DIR, "user_settings_test.json")
-
-
-@patch("requests.get")
-def test_get_currency_rates(mock_get, path_user_settings_test):
+@patch("src.utils.requests.get")
+def test_get_currency_rates(mock_get):
     mock_get.return_value.json.return_value = {
         "success": True,
         "timestamp": 1752695345,
@@ -621,7 +616,7 @@ def test_get_currency_rates(mock_get, path_user_settings_test):
         "date": "2025-07-16",
         "rates": {"RUB": 91.04},
     }
-    result = get_currency_rates(path_user_settings_test)
+    result = get_currency_rates(["EUR", "USD"])
     assert result == [
         {"currency": "EUR", "rate": 91.04},
         {"currency": "USD", "rate": 91.04},
@@ -629,10 +624,10 @@ def test_get_currency_rates(mock_get, path_user_settings_test):
     assert mock_get.call_count == 2
 
 
-@patch("requests.get")
-def test_get_stock_prices(mock_get, path_user_settings_test):
+@patch("src.utils.requests.get")
+def test_get_stock_prices(mock_get):
     mock_get.return_value.json.return_value = {"price": "223.4"}
-    result = get_stocks_prices(path_user_settings_test)
+    result = get_stocks_prices(["AMZN", "GOOGL"])
     assert result == [
         {"stock": "AMZN", "price": 223.4},
         {"stock": "GOOGL", "price": 223.4},
