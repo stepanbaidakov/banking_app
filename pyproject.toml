@@ -1,9 +1,9 @@
 [project]
-name = "course-work"
+name = "bankig_app"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Stepan Baidakov",email = "stepanbaidakov@icloud.com"}
+    {name = "Stepan Baidakov"}
 ]
 readme = "README.md"
 requires-python = ">=3.13"
